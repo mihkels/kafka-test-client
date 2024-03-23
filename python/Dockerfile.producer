@@ -1,0 +1,34 @@
+# Dockerfile for Kafka Producer
+FROM python:3.12-alpine
+
+ARG BASE_DIR
+
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY $BASE_DIR/*.py /app
+COPY $BASE_DIR/requirements.txt /app
+COPY shared/data/motivation.csv /opt/motivation.csv
+
+# Set environment variables
+ENV KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+
+ENV ENABLE_SSL=false
+ENV SSL_CA_LOCATION=cert/certificate.pem
+
+ENV NUM_SAMPLES=100
+ENV BATCH_SIZE=10
+ENV SLEEP_TIME=5
+ENV MOTIVATION_FILE=/opt/motivation.csv
+ENV MOTIVATION_TOPIC=motivation
+
+RUN apk add --no-cache \
+    librdkafka-dev \
+    build-base \
+    python3-dev
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run kafka_producer.py when the container launches
+CMD ["python", "kafka_producer.py"]

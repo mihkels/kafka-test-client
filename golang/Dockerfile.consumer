@@ -1,0 +1,29 @@
+# Build stage
+FROM golang:1.22.1 as builder
+
+ARG BASE_DIR
+
+WORKDIR /app
+
+COPY $BASE_DIR/go.mod $BASE_DIR/go.sum ./
+COPY shared/data/motivation.csv /opt/motivation.csv
+
+RUN go mod download
+
+COPY $BASE_DIR/*.go .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_demo .
+
+# Final stage
+FROM alpine:latest
+
+WORKDIR /root/
+
+ENV APPLICATION_MODE=consumer
+ENV BROKERS="localhost:9092"
+ENV TOPIC=motivation
+ENV CONSUMER_GROUP=golang-motivation-ng
+
+COPY --from=builder /app/kafka_demo .
+COPY --from=builder /opt/motivation.csv /opt/motivation.csv
+
+CMD ["./kafka_demo"]

@@ -1,0 +1,30 @@
+# Dockerfile for Kafka Consumer
+FROM python:3.12-alpine
+
+ARG BASE_DIR
+
+# Set the working directory in the container to /app
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY $BASE_DIR/*.py /app
+COPY $BASE_DIR/requirements.txt /app
+
+# Set environment variables
+ENV KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+ENV MOTIVATION_TOPIC=motivation
+ENV MOTIVATION_CONSUMER_GROUP_NAME=mygroup
+
+ENV ENABLE_SSL=false
+ENV SSL_CA_LOCATION=cert/certificate.pem
+
+RUN apk add --no-cache \
+    librdkafka-dev \
+    build-base \
+    python3-dev
+
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Run kafka_consumer.py when the container launches
+CMD ["python", "kafka_consumer.py"]

@@ -1,0 +1,38 @@
+# Start with a Rust builder image
+FROM rust:1.76 AS builder
+
+ARG BASE_DIR
+
+# Set the working directory
+WORKDIR /usr/src/kafka-client
+
+# Copy Cargo.toml and src directory into the builder image
+COPY $BASE_DIR/Cargo.toml .
+COPY $BASE_DIR/src ./src
+COPY shared/data/motivation.csv /opt/motivation.csv
+
+# Compile the application
+RUN cargo build --release
+RUN ls -al target/
+
+# Start a new stage with a smaller base image
+FROM debian:buster-slim
+
+# Set the working directory
+WORKDIR /usr/local/bin
+
+ENV APPLICATION_MODE=producer
+ENV BROKERS="localhost:9092"
+ENV TOPIC=motivation
+
+ENV NUM_SAMPLES=1000
+ENV BATCH_SIZE=10
+ENV SLEEP_TIME=5
+ENV MOTIVATION_FILE=/opt/motivation.csv
+
+# Copy the executable from the builder image
+COPY --from=builder /usr/src/kafka-client/target/release/kafka-client .
+COPY --from=builder /opt/motivation.csv /opt/motivation.csv
+
+# Set the command to run your application
+CMD ["./kafka-client"]

@@ -1,0 +1,40 @@
+# Start with the official GraalVM image
+FROM container-registry.oracle.com/graalvm/native-image:21.0.2-ol9 AS build
+
+ARG BASE_DIR
+
+# Set the working directory
+WORKDIR /app
+
+COPY $BASE_DIR/pom.xml .
+COPY $BASE_DIR/mvnw .
+COPY $BASE_DIR/.mvn ./.mvn
+COPY $BASE_DIR/src ./src
+COPY shared/data/motivation.csv /opt/motivation.csv
+
+# Build the project using Maven, this will also create the native image
+# RUN ./mvnw clean install -DskipTests -e -P no-native-image
+RUN ./mvnw -DskipTests=true -Pnative -Dagent clean install
+
+# Start a new stage for running the application
+FROM alpine:3.19.1
+
+WORKDIR /app
+
+# Copy the native executable from the build stage and rename it
+COPY --from=build /app/target/kafka-app /app/kafka-app
+
+ENV KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+ENV APPLICATION_MODE=producer
+
+ENV ENABLE_SSL=false
+ENV SSL_CA_LOCATION=cert/certificate.pem
+
+ENV NUM_SAMPLES=1000
+ENV BATCH_SIZE=10
+ENV SLEEP_TIME=1
+ENV MOTIVATION_FILE=/opt/motivation.csv
+ENV MOTIVATION_TOPIC=motivation
+
+# Define the entrypoint for the Docker image
+ENTRYPOINT ["./kafka-app"]
