@@ -48,7 +48,7 @@ jobs:
               const buildNumber = process.env.BUILD_NUMBER;
               const tagName = `${buildNumber}`;
               const { owner, repo } = context.repo;
-              console.log(`Creating tag: ${tagName}`);  // Debugging 
+              console.log(`Creating tag: ${tagName}`);  // Debugging
 
               await github.rest.git.createRef({
                 owner,
@@ -61,3 +61,4 @@ jobs:
             } catch (error) {
               core.setFailed(error.message);
             }
+          github-token: ${{ secrets.PAT }}
