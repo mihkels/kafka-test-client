@@ -25,9 +25,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: kafka-client-build-cache
+          key: kafka-client-build-cache-${{ github.run_id }}
           restore-keys: |
-            kafka-client-build-cache            
+            kafka-client-build-cache-
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: kafka-client-build-cache
+          key: kafka-client-build-cache-${{ github.run_id }}
 
       - name: Logout from DockerHub
         run: docker logout
