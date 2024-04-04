@@ -4,13 +4,28 @@ BUILD_YEAR=$(date +"%Y")
 BUILD_MONTH=$(date +"%m")
 BUILD_DAY=$(date +"%d")
 
-LATEST_TAG=$(git tag -l | grep -E "^v${BUILD_YEAR}\.${BUILD_MONTH}\.${BUILD_DAY}\.[0-9]+$" | sort -V | tail -n 1)
+echo "All tags:"
+git tag -l
+
+TAGS=$(git tag -l | grep -E "^v${BUILD_YEAR}\.${BUILD_MONTH}\.${BUILD_DAY}\.[0-9]+$")
+echo "Tags after grep:"
+echo "$TAGS"
+
+SORTED_TAGS=$(echo "$TAGS" | sort -V)
+echo "Tags after sort:"
+echo "$SORTED_TAGS"
+
+LATEST_TAG=$(echo "$SORTED_TAGS" | tail -n 1)
+echo "Latest tag:"
+echo "$LATEST_TAG"
 
 if [ -n "$LATEST_TAG" ]; then
     START_NUMBER=$(echo "$LATEST_TAG" | awk -F '.' '{print $NF}')
 else
     START_NUMBER=0
 fi
+
+echo "Start number: $START_NUMBER"
 
 #if [ -f build_number.txt ]; then
 #    START_NUMBER=$(cat build_number.txt)

@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: my-static-key
+          key: kafka-client-build-cache
           restore-keys: |
             kafka-client-build-cache            
 
