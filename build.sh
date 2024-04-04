@@ -25,16 +25,9 @@ else
     START_NUMBER=0
 fi
 
-echo "Start number: $START_NUMBER"
-
-#if [ -f build_number.txt ]; then
-#    START_NUMBER=$(cat build_number.txt)
-#else
-#    START_NUMBER=0
-#fi
-
 # shellcheck disable=SC2004
 MONTH_BUILD_NUMBER=$(($START_NUMBER + 1))
+echo "Month build number: $MONTH_BUILD_NUMBER"
 
 REPOSITORY='mihkels'
 IMAGE='kafka-tester'
@@ -68,4 +61,3 @@ for DIR in "${DIRS[@]}"; do
 done
 
 echo "BUILD_NUMBER=v${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}" >> $GITHUB_ENV
-# echo $MONTH_BUILD_NUMBER > build_number.txt
