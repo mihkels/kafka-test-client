@@ -21,6 +21,14 @@ jobs:
             [registry."docker.io"]
               mirrors = ["mirror.gcr.io"]
 
+      - name: Restore Docker layers cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: my-static-key
+          restore-keys: |
+            kafka-client-build-cache            
+
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -34,7 +42,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: kafka-client-build-cache
 
       - name: Logout from DockerHub
         run: docker logout
