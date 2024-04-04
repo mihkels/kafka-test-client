@@ -53,7 +53,6 @@ for DIR in "${DIRS[@]}"; do
         EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
         IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
         docker buildx build --load --cache-from=type=gha --cache-to=type=gha,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=linux/amd64 -t "$IMAGE_NAME" -f "$DOCKERFILE" .
-#        docker buildx build --build-arg BASE_DIR="${DIR}" --progress plain --platform=linux/amd64 -t "$IMAGE_NAME" -f "$DOCKERFILE" .
         docker push "$IMAGE_NAME"
         echo "$IMAGE_NAME"
         echo "Done building $DOCKERFILE"
