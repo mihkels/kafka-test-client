@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kafka-test-client.fullname" . }}
+  labels:
+    {{- include "kafka-test-client.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kafka-test-client.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kafka-test-client.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kafka-test-client.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+{{- range .Values.programmingLanguage }}
+{{- range .Values.applicationMode }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-tester-{{ . }}-{{ $ }}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-tester-{{ . }}-{{ $ }}
+  template:
+    metadata:
+      labels:
+        app: kafka-tester-{{ . }}-{{ $ }}
+    spec:
+      serviceAccountName: {{ include "kafka-test-client.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ $.Chart.Name }}-{{ . }}-{{ $ }}
+        securityContext:
+          {{- toYaml $.Values.securityContext | nindent 12 }}
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        env:
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: {{ $.Values.bootstrapServers }}
+          - name: MOTIVATION_TOPIC
+            value: {{ $.Values.topic }}
+          - name: APPLICATION_MODE
+            value: {{ $ }}
+          {{- if eq $ "producer" }}
+          - name: ENABLE_SSL
+            value: "true"
+          {{- end }}
+          {{- if eq $ "consumer" }}
+          - name: MOTIVATION_CONSUMER_GROUP_NAME
+            value: {{ $.Values.consumerConfigurations.consumerGroupPrefix }}-{{ . }}-{{ $ }}
+          {{- end }}
+{{- end }}
+{{- end }}
