@@ -32,4 +32,4 @@ ENV ENABLE_SSL=false
 ENV MOTIVATION_CONSUMER_GROUP_NAME=motivation_group_java
 
 # Define the entrypoint for the Docker image
-ENTRYPOINT ["./kafka-app"]
+ENTRYPOINT ["/app/kafka-app"]

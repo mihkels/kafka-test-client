@@ -37,4 +37,4 @@ ENV MOTIVATION_FILE=/opt/motivation.csv
 ENV MOTIVATION_TOPIC=motivation
 
 # Define the entrypoint for the Docker image
-ENTRYPOINT ["./kafka-app"]
+ENTRYPOINT ["/app/kafka-app"]

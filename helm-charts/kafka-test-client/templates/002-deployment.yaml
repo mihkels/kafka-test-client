@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: kafka-tester-{{ $language }}-{{ . }}
+        {{- include "kafka-test-client.labels" $ | nindent 8 }}
     spec:
       serviceAccountName: {{ include "kafka-test-client.serviceAccountName" $ }}
       securityContext:
@@ -33,12 +34,18 @@ spec:
             value: {{ . }}
           {{- if eq . "producer" }}
           - name: ENABLE_SSL
-            value: "true"
+            value: {{ quote $.Values.enableSSL }}
           {{- end }}
           {{- if eq . "consumer" }}
           - name: MOTIVATION_CONSUMER_GROUP_NAME
             value: {{ $.Values.consumerConfigurations.consumerGroupPrefix }}{{ $language }}-{{ . }}
           {{- end }}
+      {{- if $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range $.Values.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
 ---
 {{- end }}
 {{- end }}

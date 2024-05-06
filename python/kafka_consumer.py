@@ -27,7 +27,7 @@ if enable_ssl:
         'security.protocol': 'SSL',
         'ssl.ca.location': ssl_ca_location,
     }
-    config.update(ssl_config)
+    config |= ssl_config
 
 # Create a Kafka consumer
 consumer = Consumer(config)
@@ -41,12 +41,11 @@ while True:
     if msg is None:
         continue
     if msg.error():
-        if msg.error().code() == KafkaError.get_partition_eof():
+        if msg.error().code() == KafkaError._PARTITION_EOF:
             continue
-        else:
-            print(msg.error())
-            break
+        print(msg.error())
+        break
 
-    print('Received message: {}'.format(msg.value().decode('utf-8')))
+    print(f"Received message: {msg.value().decode('utf-8')}")
 
 consumer.close()
