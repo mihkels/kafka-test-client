@@ -16,7 +16,7 @@ RUN cargo build --release
 RUN ls -al target/
 
 # Start a new stage with a smaller base image
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 # Set the working directory
 WORKDIR /usr/local/bin
@@ -35,4 +35,4 @@ COPY --from=builder /usr/src/kafka-client/target/release/kafka-client .
 COPY --from=builder /opt/motivation.csv /opt/motivation.csv
 
 # Set the command to run your application
-CMD ["./kafka-client"]
+CMD ["/usr/local/bin/kafka-client"]

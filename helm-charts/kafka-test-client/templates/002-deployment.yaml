@@ -1,0 +1,51 @@
+{{- range .Values.programmingLanguage }}
+{{- $language := . }}
+{{- range $.Values.applicationMode }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-tester-{{ $language }}-{{ . }}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-tester-{{ $language }}-{{ . }}
+  template:
+    metadata:
+      labels:
+        app: kafka-tester-{{ $language }}-{{ . }}
+        {{- include "kafka-test-client.labels" $ | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "kafka-test-client.serviceAccountName" $ }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ $.Chart.Name }}-{{ $language }}-{{ . }}
+        securityContext:
+          {{- toYaml $.Values.securityContext | nindent 12 }}
+        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default (printf "%s-%s-%s" . $.Chart.AppVersion $language) }}"
+        imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        env:
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: {{ $.Values.bootstrapServers }}
+          - name: MOTIVATION_TOPIC
+            value: {{ $.Values.topic }}
+          - name: APPLICATION_MODE
+            value: {{ . }}
+          {{- if eq . "producer" }}
+          - name: ENABLE_SSL
+            value: {{ quote $.Values.enableSSL }}
+          {{- end }}
+          {{- if eq . "consumer" }}
+          - name: MOTIVATION_CONSUMER_GROUP_NAME
+            value: {{ $.Values.consumerConfigurations.consumerGroupPrefix }}{{ $language }}-{{ . }}
+          {{- end }}
+      {{- if $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range $.Values.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+---
+{{- end }}
+{{- end }}
