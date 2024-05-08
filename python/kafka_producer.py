@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import uuid
 
 import pandas as pd
 from confluent_kafka import Producer
@@ -59,7 +60,12 @@ while True:
                 row_dict = {k.lower(): v for k, v in row.to_dict().items()}
                 print(row_dict)
                 # Send the row to Kafka topic
-                producer.produce(motivation_topic, json.dumps(row_dict).encode('utf-8'), callback=delivery_report)
+                producer.produce(
+                    motivation_topic,
+                    json.dumps(row_dict).encode('utf-8'),
+                    key=str(uuid.uuid4()).encode('utf-8'),
+                    callback=delivery_report
+                )
 
             # Trigger any available delivery report callbacks from previous produce() calls
             producer.poll(0)
