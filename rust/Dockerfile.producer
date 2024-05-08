@@ -16,7 +16,7 @@ RUN cargo build --release
 RUN ls -al target/
 
 # Start a new stage with a smaller base image
-FROM debian:bullseye-slim
+FROM bookworm-slim
 
 # Set the working directory
 WORKDIR /usr/local/bin
