@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/IBM/sarama"
+	"github.com/google/uuid"
 	"log"
 	"time"
 )
@@ -25,6 +26,7 @@ func runProducer() {
 	batchSize := ConfigInstance.BatchSize
 	sleepDuration := time.Second * ConfigInstance.SleepInterval
 
+	log.Printf("Start sending data into topic: %s\n", ConfigInstance.Topic)
 	for {
 		for i := 0; i < len(motivationData); i += batchSize {
 			end := i + batchSize
@@ -40,15 +42,17 @@ func runProducer() {
 					log.Fatalf("json.Marshal: %s", err)
 				}
 
+				randomUUID := uuid.New()
 				msg := &sarama.ProducerMessage{
 					Topic: ConfigInstance.Topic,
-					Value: sarama.StringEncoder(string(jsonRow)),
+					Value: sarama.StringEncoder(jsonRow),
+					Key:   sarama.StringEncoder(randomUUID.String()),
 				}
 				partition, offset, err := producer.SendMessage(msg)
 				if err != nil {
 					log.Fatalln(err)
 				}
-				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", ConfigInstance.Topic, partition, offset)
+				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", ConfigInstance.Topic, partition, offset, msg.Key)
 			}
 
 			time.Sleep(sleepDuration)

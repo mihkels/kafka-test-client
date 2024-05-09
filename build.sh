@@ -29,7 +29,7 @@ if [ -n "$GITHUB_ENV" ]; then
 else
     echo "Using local environment"
     if [ -f "build_number.txt" ]; then
-        BUILD_NUMBER=$(cat build_number.txt)
+        START_NUMBER=$(cat build_number.txt)
         echo "Build number: $BUILD_NUMBER"
     else
         echo "File build_number.txt does not exist."
@@ -49,6 +49,7 @@ fi
 
 # List of directories
 DIRS=("python" "rust" "java" "golang")
+#DIRS=("golang")
 
 # Generate a hash of the .dockerignore file
 DOCKERIGNORE_HASH=$(shasum -a 256 .dockerignore | awk '{ print $1 }')
@@ -68,7 +69,7 @@ for DIR in "${DIRS[@]}"; do
         EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
         IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
         docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=linux/amd64 -t "$IMAGE_NAME" -f "$DOCKERFILE" .
-#        docker push "$IMAGE_NAME"
+        docker push "$IMAGE_NAME"
         echo "$IMAGE_NAME"
         echo "Done building $DOCKERFILE"
     done

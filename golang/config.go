@@ -31,12 +31,12 @@ func init() {
 func NewConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: Could not load .env file will fallback to environment variables")
 	}
 
 	return &Config{
 		ApplicationMode:  getEnvString("APPLICATION_MODE", "producer"),
-		Brokers:          getEnvString("BROKERS", "localhost:9092"),
+		Brokers:          getEnvString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
 		Topic:            getEnvString("TOPIC", "test"),
 		ProducerDataFile: getEnvString("MOTIVATION_FILE", "data.csv"),
 		NumberOfSamples:  getEnvInt("NUM_SAMPLES", 100),

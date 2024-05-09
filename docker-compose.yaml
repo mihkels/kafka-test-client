@@ -1,0 +1,33 @@
+version: '3.7'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9092"
+      - "9094:9094"
+    volumes:
+      - ./cert:/etc/kafka/secrets 
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,SSL:SSL
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-0:29094,PLAINTEXT_HOST://localhost:9093,SSL://localhost:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29094,PLAINTEXT_HOST://0.0.0.0:9092,SSL://0.0.0.0:9094
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SSL_KEYSTORE_FILENAME: server.p12 
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12 
+      KAFKA_SSL_KEY_CREDENTIALS: "kafka_creds" 
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: "kafka_creds" 
+      KAFKA_SSL_TRUSTSTORE_FILENAME: server.p12
+      KAFKA_SSL_TRUSTSTORE_TYPE: PKCS12
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: "kafka_creds" 
+      KAFKA_SSL_CLIENT_AUTH: none 

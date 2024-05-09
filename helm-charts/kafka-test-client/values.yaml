@@ -74,7 +74,7 @@ tolerations: []
 
 affinity: {}
 
-bootstrapServers:  ""
+bootstrapServers: ""
 topic: ""
 enableSSL: false
 
