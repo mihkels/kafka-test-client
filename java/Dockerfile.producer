@@ -18,12 +18,16 @@ RUN ./mvnw -DskipTests=true -Pnative -Dagent clean install
 RUN ls -al target/
 
 # Start a new stage for running the application
-FROM alpine:3.19.1
+FROM oraclelinux:9-slim
 
 WORKDIR /app
+RUN groupadd appuser && useradd -g appuser appuser
+
+# RUN addgroup -S appuser && adduser -S appuser -G appuser
 
 # Copy the native executable from the build stage and rename it
 COPY --from=build /app/target/kafka-app /app/kafka-app
+COPY --from=build /opt/motivation.csv /opt/motivation.csv
 
 RUN ls -al /app
 RUN chmod +x /app/kafka-app
@@ -38,7 +42,10 @@ ENV NUM_SAMPLES=1000
 ENV BATCH_SIZE=10
 ENV SLEEP_TIME=1
 ENV MOTIVATION_FILE=/opt/motivation.csv
-ENV MOTIVATION_TOPIC=motivation
+ENV TOPIC=motivation
+
+RUN chown -R appuser:appuser /app
+USER appuser
 
 # Define the entrypoint for the Docker image
-CMD ["/app/kafka-app"]
+ENTRYPOINT ["/app/kafka-app"]

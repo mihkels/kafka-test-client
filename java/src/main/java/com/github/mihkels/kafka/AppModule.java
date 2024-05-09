@@ -24,17 +24,17 @@ public class AppModule {
 
     @Provides
     public AppConfig provideAppConfig() {
-        var dotenv = Dotenv.load();
+        var dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         // Kafka producer configuration
         var keySerializer = "org.apache.kafka.common.serialization.StringSerializer";
         var valueSerializer = "org.apache.kafka.common.serialization.StringSerializer";
-        var bootstrapServers = dotenv.get("BOOTSTRAP_SERVERS");
-        var topicName = dotenv.get("TOPIC_NAME");
+        var bootstrapServers = dotenv.get("KAFKA_BOOTSTRAP_SERVERS");
+        var topicName = dotenv.get("TOPIC");
         var csvFilePath = dotenv.get("MOTIVATION_FILE");
-        var numberOfLines = Integer.parseInt(Objects.requireNonNull(dotenv.get("NUM_SAMPLES")));
-        var patchSize = Integer.parseInt(Objects.requireNonNull(dotenv.get("BATCH_SIZE")));
-        var sleepTime = Integer.parseInt(Objects.requireNonNull(dotenv.get("SLEEP_TIME")));
+        var numberOfLines = Integer.parseInt(Objects.requireNonNull(dotenv.get("NUM_SAMPLES", "0")));
+        var patchSize = Integer.parseInt(Objects.requireNonNull(dotenv.get("BATCH_SIZE", "0")));
+        var sleepTime = Integer.parseInt(Objects.requireNonNull(dotenv.get("SLEEP_TIME", "0")));
         var consumerGroupId = dotenv.get("MOTIVATION_CONSUMER_GROUP_NAME");
         var applicationType = dotenv.get("APPLICATION_MODE");
 

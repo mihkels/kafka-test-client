@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MotivationDataLoader {
-    public static final Logger logger = LoggerFactory.getLogger(MotivationKafkaProducer.class);
+    public static final Logger logger = LoggerFactory.getLogger(MotivationDataLoader.class);
     private final DataLoaderConfig config;
     private final CSVReader csvReader;
 

@@ -176,6 +176,7 @@
                 <buildArgs>
                   <buildArg>--initialize-at-build-time=org.slf4j.LoggerFactory,ch.qos.logback</buildArg>
                   <buildArg>-H:IncludeResources=logback.xml</buildArg>
+                  <buildArg>-H:+StaticExecutableWithDynamicLibC</buildArg>
                 </buildArgs>
             </configuration>
           </plugin>

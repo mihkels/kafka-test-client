@@ -11,6 +11,10 @@ public class App {
 
         var appComponent = DaggerAppComponent.create();
         var config = appComponent.provideAppConfig();
+        logger.info("Application type: {}", config.applicationType());
+        logger.info("Bootstrap servers: {}", config.bootstrapServers());
+        logger.info("Topic name: {}", config.topicName());
+
         if (config.applicationType().equals("producer")) {
             var producer = appComponent.producer();
             producer.run();
