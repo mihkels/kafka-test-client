@@ -15,21 +15,29 @@ COPY shared/data/motivation.csv /opt/motivation.csv
 # Build the project using Maven, this will also create the native image
 # RUN ./mvnw clean install -DskipTests -e -P no-native-image
 RUN ./mvnw -DskipTests=true -Pnative -Dagent clean install
+RUN ls -al target/
 
 # Start a new stage for running the application
-FROM alpine:3.19.1
+FROM oraclelinux:9-slim
 
 WORKDIR /app
+RUN groupadd appuser && useradd -g appuser appuser
 
 # Copy the native executable from the build stage and rename it
 COPY --from=build /app/target/kafka-app /app/kafka-app
 
+RUN ls -al /app
+RUN chmod +x /app/kafka-app
+
 ENV KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ENV APPLICATION_MODE=consumer
-ENV MOTIVATION_TOPIC=motivation
+ENV TOPIC=motivation
 
 ENV ENABLE_SSL=false
 ENV MOTIVATION_CONSUMER_GROUP_NAME=motivation_group_java
+
+RUN chown -R appuser:appuser /app
+USER appuser
 
 # Define the entrypoint for the Docker image
 ENTRYPOINT ["/app/kafka-app"]

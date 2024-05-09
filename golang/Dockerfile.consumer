@@ -1,29 +1,39 @@
 # Build stage
-FROM golang:1.22.1 as builder
+FROM golang:1.22.3 as builder
 
 ARG BASE_DIR
 
 WORKDIR /app
 
 COPY $BASE_DIR/go.mod $BASE_DIR/go.sum ./
+COPY $BASE_DIR/startup.sh /opt/startup.sh
 COPY shared/data/motivation.csv /opt/motivation.csv
 
 RUN go mod download
 
 COPY $BASE_DIR/*.go .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_demo .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_app .
+RUN ls -al
 
 # Final stage
 FROM alpine:latest
 
-WORKDIR /root/
+WORKDIR /app
+RUN addgroup -S appuser && adduser -S appuser -G appuser
 
 ENV APPLICATION_MODE=consumer
-ENV BROKERS="localhost:9092"
+ENV KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ENV TOPIC=motivation
 ENV CONSUMER_GROUP=golang-motivation-ng
 
-COPY --from=builder /app/kafka_demo .
+COPY --from=builder /opt/startup.sh /app/startup.sh
+COPY --from=builder /app/kafka_app /app/kafka_app
 COPY --from=builder /opt/motivation.csv /opt/motivation.csv
 
-CMD ["./kafka_demo"]
+RUN ls -al
+RUN chmod +x /app/startup.sh
+
+RUN chown -R appuser:appuser /app
+USER appuser
+
+ENTRYPOINT ["/app/startup.sh"]

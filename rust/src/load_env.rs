@@ -15,7 +15,7 @@ pub struct EnvVars {
 pub fn load_env_vars() -> EnvVars {
     dotenv().ok();
 
-    let brokers = env::var("BROKERS").unwrap_or_else(|_| String::from("localhost:9092"));
+    let brokers = env::var("KAFKA_BOOTSTRAP_SERVERS").unwrap_or_else(|_| String::from("localhost:9092"));
     let topic = env::var("TOPIC").unwrap_or_else(|_| String::from("no_motivation"));
     let consumer_group = env::var("CONSUMER_GROUP").unwrap_or_else(|_| String::from("rust-motivation-cg"));
     let motivation_filename = env::var("MOTIVATION_FILE").unwrap_or_else(|_| String::from("motivation.csv"));

@@ -15,13 +15,13 @@ RUN cargo build --release
 RUN ls -al target/
 
 # Start a new stage with a smaller base image
-FROM bookworm-slim
+FROM debian:bookworm-slim
 
 # Set the working directory
 WORKDIR /usr/local/bin
 
 ENV APPLICATION_MODE=consumer
-ENV BROKERS="localhost:9092"
+ENV KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ENV TOPIC=motivation
 ENV CONSUMER_GROUP=rust-motivation-ng
 
