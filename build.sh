@@ -47,9 +47,13 @@ else
     IMAGE='kafka-tester'
 fi
 
+ARCHITECTURES=linux/amd64,linux/arm64
+if [ -n "$GITHUB_ENV" ]; then
+  ARCHITECTURES=linux/amd64
+fi
+
 # List of directories
 DIRS=("python" "rust" "java" "golang")
-#DIRS=("golang")
 
 # Generate a hash of the .dockerignore file
 DOCKERIGNORE_HASH=$(shasum -a 256 .dockerignore | awk '{ print $1 }')
@@ -68,7 +72,7 @@ for DIR in "${DIRS[@]}"; do
         echo "Building $DOCKERFILE"
         EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
         IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
-        docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=linux/amd64,linux/arm64 -t "$IMAGE_NAME" -f "$DOCKERFILE" .
+        docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "$DOCKERFILE" .
         docker push "$IMAGE_NAME"
         echo "$IMAGE_NAME"
         echo "Done building $DOCKERFILE"
