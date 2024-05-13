@@ -35,6 +35,12 @@ spec:
           {{- if eq . "producer" }}
           - name: ENABLE_SSL
             value: {{ quote $.Values.enableSSL }}
+          - name: NUM_SAMPLES
+            value: {{ quote $.Values.producerConfigurations.sampleSize }}
+          - name: BATCH_SIZE
+            value: {{ quote $.Values.producerConfigurations.batchSize }}
+          - name: SLEEP_TIME
+            value: {{ quote $.Values.producerConfigurations.sampleIntervalInSeconds }}
           {{- end }}
           {{- if eq . "consumer" }}
           - name: MOTIVATION_CONSUMER_GROUP_NAME

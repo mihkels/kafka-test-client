@@ -83,7 +83,7 @@ consumerConfigurations:
 
 producerConfigurations:
   sampleSize: 1000
-  sampleIntervalInSeconds: 1000
+  sampleIntervalInSeconds: 5
   batchSize: 10
 
 programmingLanguage:
