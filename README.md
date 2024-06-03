@@ -1,8 +1,9 @@
-# KafkaKubeClients - Kafka Client Testing, Tailored for Kubernetes
-
-<div align="center">
-    <img src="docs/assets/KafkaKubeClients-logo.svg" />
+<div align="center" style="margin: 15px">
+    <img with="350" style="padding: 25ps" height="350" src="docs/assets/KafkaKubeClients-logo.svg" />
 </div>
+<hr />
+
+# KafkaKubeClients - Kafka Client Testing, Tailored for Kubernetes
 
 > We're here to help you check that your Kafka setup works perfectly in Kubernetes, regardless of the programming language you use.
 
