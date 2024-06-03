@@ -1,7 +1,7 @@
 # KafkaKubeClients - Kafka Client Testing, Tailored for Kubernetes
 
-> We're here to make it easy for you to check that your Kafka setup works perfectly in Kubernetes,
-> no matter the programming language you use.
+> We're here to help you check that your Kafka setup works perfectly in Kubernetes, regardless of the programming language you use.
+> 
 
 The motivation behind writing the Kafka test client tool was to provide a simple way to test new Kubernetes Kafka cluster deployments and verify that everything was configured correctly. The secondary goal is to provide development teams with configured working samples of producers and consumers in different programming languages.
 
@@ -18,8 +18,35 @@ The motivation behind writing the Kafka test client tool was to provide a simple
 
 The simplest way to begin is by cloning the git repository and deploying the chart from the helm chart directory.
 
+```bash
+git clone https://github.com/mihkels/kafka-test-client.git
+cd kafka-test-client
+# Create namespace to deploy kafka test clients
+kubectl create ns kafka-test
+# Deploy KafkaKubeClients
+helm upgrade helm-charts/kafka-test-client -n kafka-test -f overrides.yaml --install
+```
+
 > 💡 NOTE: You should have a running Kubernetes test cluster with a Kafka cluster installed in your target repository.
 > 
+
+Sample `overrides.yaml` file:
+
+```yaml
+bootstrapServers: "strimzi-cluster-kafka-bootstrap.kafka.svc:9092"
+topic: "motivation"
+
+producerConfigurations:
+  sampleIntervalInSeconds: 5 # How long to sleep between sending messages
+  batchSize: 10 # Number of messages to send in each loop
+
+# The language in which to create the producer and consumer
+programmingLanguage:
+  - golang
+  - python
+  - java
+  - rust
+```
 
 The Kafka test clients have been tested with the following Kafka and Kafka-compliant operators:
 
