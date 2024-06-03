@@ -1,4 +1,7 @@
-# kafka-test-client
+# KafkaKubeClients - Kafka Client Testing, Tailored for Kubernetes
+
+> We're here to make it easy for you to check that your Kafka setup works perfectly in Kubernetes,
+> no matter the programming language you use.
 
 The motivation behind writing the Kafka test client tool was to provide a simple way to test new Kubernetes Kafka cluster deployments and verify that everything was configured correctly. The secondary goal is to provide development teams with configured working samples of producers and consumers in different programming languages.
 
