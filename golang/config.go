@@ -19,7 +19,9 @@ type Config struct {
 	BatchSize        int
 	SleepInterval    time.Duration
 
-	Group string
+	Group                  string
+	EnableStatistics       bool
+	StatisticsCollectorURL string
 }
 
 var ConfigInstance *Config
@@ -35,14 +37,16 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		ApplicationMode:  getEnvString("APPLICATION_MODE", "producer"),
-		Brokers:          getEnvString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
-		Topic:            getEnvString("TOPIC", "test"),
-		ProducerDataFile: getEnvString("MOTIVATION_FILE", "data.csv"),
-		NumberOfSamples:  getEnvInt("NUM_SAMPLES", 100),
-		BatchSize:        getEnvInt("BATCH_SIZE", 10),
-		SleepInterval:    time.Duration(getEnvInt("SLEEP_TIME", 10)),
-		Group:            getEnvString("CONSUMER_GROUP", "golang-test-cg"),
+		ApplicationMode:        getEnvString("APPLICATION_MODE", "producer"),
+		Brokers:                getEnvString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
+		Topic:                  getEnvString("TOPIC", "test"),
+		ProducerDataFile:       getEnvString("MOTIVATION_FILE", "data.csv"),
+		NumberOfSamples:        getEnvInt("NUM_SAMPLES", 100),
+		BatchSize:              getEnvInt("BATCH_SIZE", 10),
+		SleepInterval:          time.Duration(getEnvInt("SLEEP_TIME", 10)),
+		Group:                  getEnvString("CONSUMER_GROUP", "golang-test-cg"),
+		EnableStatistics:       getEnvString("ENABLE_STATISTICS", "false") == "true",
+		StatisticsCollectorURL: getEnvString("STATISTICS_COLLECTOR_URL", "http://localhost:8080"),
 	}
 }
 
