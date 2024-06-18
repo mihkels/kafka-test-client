@@ -10,15 +10,23 @@ import (
 	"syscall"
 )
 
-type ConsumerGroupHandler struct{}
+type ConsumerGroupHandler struct {
+	messageCount int
+}
 
-func (ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
-func (ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
+func (h *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
+func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 
-func (ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		fmt.Printf("Message topic:%q, body:%q, partition:%d offset:%d\n", msg.Topic, string(msg.Value), msg.Partition, msg.Offset)
 		sess.MarkMessage(msg, "")
+
+		h.messageCount++
+		if h.messageCount == 10 {
+			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount))
+			h.messageCount = 0
+		}
 	}
 	return nil
 }
@@ -38,7 +46,7 @@ func runConsumer() {
 
 	go func() {
 		for {
-			if err := group.Consume(ctx, []string{ConfigInstance.Topic}, handler); err != nil {
+			if err := group.Consume(ctx, []string{ConfigInstance.Topic}, &handler); err != nil {
 				log.Fatalln("Error from consumer: ", err)
 			}
 		}

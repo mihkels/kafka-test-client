@@ -1,0 +1,20 @@
+### GET statistics from server
+GET http://localhost:8080/statistics
+
+### POST statistics to server
+POST http://localhost:8080/collect
+Content-Type: application/json
+
+{
+    "workerType": "consumer",
+    "workerName": "consumer-1",
+    "count": 10
+}
+
+### POST Get worker name
+POST http://localhost:8080/worker-count
+Content-Type: application/json
+
+{
+    "workerType": "consumer"
+}

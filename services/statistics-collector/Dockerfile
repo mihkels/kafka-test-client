@@ -1,7 +1,5 @@
 # Build stage
-FROM golang:1.22.3 as builder
-
-ARG BASE_DIR
+FROM golang:1.22.4 as builder
 
 WORKDIR /app
 
@@ -12,7 +10,7 @@ COPY shared/data/motivation.csv /opt/motivation.csv
 RUN go mod download
 
 COPY $BASE_DIR/*.go .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_app .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o statistics_app .
 RUN ls -al
 
 # Final stage
@@ -21,16 +19,10 @@ FROM alpine:latest
 WORKDIR /app
 RUN addgroup -S appuser && adduser -S appuser -G appuser
 
-ENV APPLICATION_MODE=consumer
-ENV KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
-ENV TOPIC=motivation
-ENV CONSUMER_GROUP=golang-motivation-ng
-ENV ENABLE_STATISTICS=true
-ENV STATISTICS_COLLECTOR_URL="http://localhost:8080"
+ENV SERVER_PORT="8080"
 
 COPY --from=builder /opt/startup.sh /app/startup.sh
-COPY --from=builder /app/kafka_app /app/kafka_app
-COPY --from=builder /opt/motivation.csv /opt/motivation.csv
+COPY --from=builder /app/statistics_app /app/statistics_app
 
 RUN ls -al
 RUN chmod +x /app/startup.sh
