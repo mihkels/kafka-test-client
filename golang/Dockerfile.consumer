@@ -25,6 +25,8 @@ ENV APPLICATION_MODE=consumer
 ENV KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ENV TOPIC=motivation
 ENV CONSUMER_GROUP=golang-motivation-ng
+ENV ENABLE_STATISTICS=true
+ENV STATISTICS_COLLECTOR_URL="http://localhost:8080"
 
 COPY --from=builder /opt/startup.sh /app/startup.sh
 COPY --from=builder /app/kafka_app /app/kafka_app

@@ -10,3 +10,11 @@ Content-Type: application/json
     "workerName": "consumer-1",
     "count": 10
 }
+
+### POST Get worker name
+POST http://localhost:8080/worker-count
+Content-Type: application/json
+
+{
+    "workerType": "consumer"
+}

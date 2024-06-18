@@ -24,6 +24,8 @@ RUN addgroup -S appuser && adduser -S appuser -G appuser
 ENV APPLICATION_MODE=producer
 ENV KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ENV TOPIC=motivation
+ENV ENABLE_STATISTICS=true
+ENV STATISTICS_COLLECTOR_URL="http://localhost:8080"
 
 ENV NUM_SAMPLES=1000
 ENV BATCH_SIZE=10

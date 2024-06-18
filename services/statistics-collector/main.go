@@ -78,6 +78,44 @@ func workerCounter(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var reqMap map[string]interface{}
+	err = json.Unmarshal(bodyBytes, &reqMap)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	workerType, ok := reqMap["workerType"].(string)
+	if !ok {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var resp CountResponse
+	if workerType == "consumer" {
+		counterInfo.Consumers++
+		resp = CountResponse{
+			Count: counterInfo.Consumers,
+			Name:  "consumer-" + fmt.Sprint(counterInfo.Consumers),
+		}
+	} else {
+		counterInfo.Producers++
+		resp = CountResponse{
+			Count: counterInfo.Producers,
+			Name:  "producer-" + fmt.Sprint(counterInfo.Producers),
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if convertToJson(w, resp) {
+		return
+	}
 }
 
 func collectStatistics(w http.ResponseWriter, r *http.Request) {

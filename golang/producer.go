@@ -55,6 +55,7 @@ func runProducer() {
 				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", ConfigInstance.Topic, partition, offset, msg.Key)
 			}
 
+			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)))
 			time.Sleep(sleepDuration)
 		}
 	}

@@ -14,7 +14,7 @@ type CollectionRequest struct {
 	Count      int64  `json:"count"`
 }
 
-func sendStatistics(workerType string, workerName string, count int64) {
+func SendStatistics(workerType string, workerName string, count int64) {
 	url := ConfigInstance.StatisticsCollectorURL
 	req := CollectionRequest{
 		WorkerType: workerType,
@@ -28,7 +28,7 @@ func sendStatistics(workerType string, workerName string, count int64) {
 		return
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(url+"/collect", "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		log.Printf("http.Post failed: %s", err)
 		return

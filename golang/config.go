@@ -22,6 +22,7 @@ type Config struct {
 	Group                  string
 	EnableStatistics       bool
 	StatisticsCollectorURL string
+	WorkerName             string
 }
 
 var ConfigInstance *Config
