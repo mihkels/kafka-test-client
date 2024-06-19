@@ -32,6 +32,12 @@ spec:
             value: {{ $.Values.topic }}
           - name: APPLICATION_MODE
             value: {{ . }}
+          - name: ENABLE_STATISTICS
+            value: {{ quote $.Values.enableStatistics | default "false" }}
+          {{- if eq $.Values.enableStatistics "true" }}
+          - name: STATISTICS_COLLECTOR_URL
+            value: {{ $.Values.statisticsCollectorUrl }}
+          {{- end }}
           {{- if eq . "producer" }}
           - name: ENABLE_SSL
             value: {{ quote $.Values.enableSSL }}

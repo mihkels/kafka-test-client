@@ -1,11 +1,12 @@
 # Build stage
 FROM golang:1.22.4 as builder
 
+ARG BASE_DIR
+
 WORKDIR /app
 
 COPY $BASE_DIR/go.mod $BASE_DIR/go.sum ./
 COPY $BASE_DIR/startup.sh /opt/startup.sh
-COPY shared/data/motivation.csv /opt/motivation.csv
 
 RUN go mod download
 
@@ -25,6 +26,7 @@ COPY --from=builder /opt/startup.sh /app/startup.sh
 COPY --from=builder /app/statistics_app /app/statistics_app
 
 RUN ls -al
+RUN chmod +x /app/statistics_app
 RUN chmod +x /app/startup.sh
 
 RUN chown -R appuser:appuser /app

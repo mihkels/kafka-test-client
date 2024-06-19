@@ -1,14 +1,48 @@
 ### GET statistics from server
 GET http://localhost:8080/statistics
 
-### POST statistics to server
+### POST send statistics to server as producer
+POST http://localhost:8080/collect
+Content-Type: application/json
+
+{
+  "workerType": "producer",
+  "workerName": "producer-1",
+  "count": 10,
+  "ids": [
+    "454234C3-A6DF-4529-B7CE-7C2336BA610A",
+    "3228DB74-F8F6-4646-B183-19DC5B1CA8E8",
+    "137BADD1-0BF9-476A-9926-C9FA97DCEB01",
+    "DADF2DC1-3BC5-4B39-B41C-ED4C2223BAF5",
+    "8D16B7AB-533A-49FC-911C-36E1601241C0",
+    "7F3BA2AF-A2D1-4775-8B4F-3EDF4215BF40",
+    "73CAFA5E-6092-4608-B462-A193C1A07EEA",
+    "EFC8B252-535D-479C-97D4-F8F36744D1F7",
+    "BC572519-E78D-4619-B7BE-71AD6A790CB5",
+    "E43827BA-B60E-41AF-B448-005520A9137A"
+  ]
+}
+
+### POST send statistics to server as consumer
 POST http://localhost:8080/collect
 Content-Type: application/json
 
 {
     "workerType": "consumer",
     "workerName": "consumer-1",
-    "count": 10
+    "count": 10,
+    "ids": [
+      "454234C3-A6DF-4529-B7CE-7C2336BA610A",
+      "3228DB74-F8F6-4646-B183-19DC5B1CA8E8",
+      "137BADD1-0BF9-476A-9926-C9FA97DCEB01",
+      "DADF2DC1-3BC5-4B39-B41C-ED4C2223BAF5",
+      "8D16B7AB-533A-49FC-911C-36E1601241C0",
+      "7F3BA2AF-A2D1-4775-8B4F-3EDF4215BF40",
+      "73CAFA5E-6092-4608-B462-A193C1A07EEA",
+      "EFC8B252-535D-479C-97D4-F8F36744D1F7",
+      "BC572519-E78D-4619-B7BE-71AD6A790CB5",
+      "E43827BA-B60E-41AF-B448-005520A9137A"
+    ]
 }
 
 ### POST Get worker name

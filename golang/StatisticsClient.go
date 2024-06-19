@@ -3,23 +3,26 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
 )
 
 type CollectionRequest struct {
-	WorkerType string `json:"workerType"`
-	WorkerName string `json:"workerName"`
-	Count      int64  `json:"count"`
+	WorkerType string      `json:"workerType"`
+	WorkerName string      `json:"workerName"`
+	Count      int64       `json:"count"`
+	Ids        []uuid.UUID `json:"ids"`
 }
 
-func SendStatistics(workerType string, workerName string, count int64) {
+func SendStatistics(workerType string, workerName string, count int64, ids []uuid.UUID) {
 	url := ConfigInstance.StatisticsCollectorURL
 	req := CollectionRequest{
 		WorkerType: workerType,
 		WorkerName: workerName,
 		Count:      count,
+		Ids:        ids,
 	}
 
 	data, err := json.Marshal(req)

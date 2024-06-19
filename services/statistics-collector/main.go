@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"os"
@@ -11,10 +12,12 @@ import (
 )
 
 type Statistics struct {
-	consumers     map[string]int64
-	producers     map[string]int64
-	totalSent     int64
-	totalReceived int64
+	consumers         map[string]int64
+	producers         map[string]int64
+	totalSent         int64
+	totalReceived     int64
+	matchedIds        int64
+	missingMatchedIds int64
 }
 
 type WorkerCounter struct {
@@ -23,9 +26,10 @@ type WorkerCounter struct {
 }
 
 type CollectionRequest struct {
-	WorkerType string `json:"workerType"`
-	WorkerName string `json:"workerName"`
-	Count      int64  `json:"count"`
+	WorkerType string      `json:"workerType"`
+	WorkerName string      `json:"workerName"`
+	Count      int64       `json:"count"`
+	Ids        []uuid.UUID `json:"ids"`
 }
 
 type StatisticsResponse struct {
@@ -33,6 +37,8 @@ type StatisticsResponse struct {
 	TotalProducers int   `json:"totalProducers"`
 	TotalSent      int64 `json:"totalSent"`
 	TotalReceived  int64 `json:"totalReceived"`
+	MissingIds     int64 `json:"missingIds"`
+	MatchedIds     int64 `json:"matchedIds"`
 }
 
 type CountResponse struct {
@@ -45,6 +51,7 @@ var statistics *Statistics
 
 var counterOnce sync.Once
 var counterInfo *WorkerCounter
+var idMatcher map[uuid.UUID]bool
 
 func main() {
 	port := os.Getenv("SERVER_PORT")
@@ -135,6 +142,7 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	manageStatistics(req)
+	handleMatchedIds(req)
 
 	data := map[string]string{
 		"status": "OK",
@@ -149,10 +157,12 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 func initStatistics() {
 	once.Do(func() {
 		statistics = &Statistics{
-			consumers:     make(map[string]int64),
-			producers:     make(map[string]int64),
-			totalReceived: 0,
-			totalSent:     0,
+			consumers:         make(map[string]int64),
+			producers:         make(map[string]int64),
+			totalReceived:     0,
+			totalSent:         0,
+			missingMatchedIds: 0,
+			matchedIds:        0,
 		}
 	})
 }
@@ -169,13 +179,14 @@ func showStatistics(w http.ResponseWriter, r *http.Request) {
 		TotalProducers: len(statistics.producers),
 		TotalSent:      statistics.totalSent,
 		TotalReceived:  statistics.totalReceived,
-	}
-
-	if convertToJson(w, data) {
-		return
+		MissingIds:     statistics.missingMatchedIds,
+		MatchedIds:     statistics.matchedIds,
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if convertToJson(w, data) {
+		return
+	}
 }
 
 func manageStatistics(req CollectionRequest) {
@@ -186,6 +197,27 @@ func manageStatistics(req CollectionRequest) {
 		statistics.totalSent += req.Count
 		statistics.producers[req.WorkerName] += req.Count
 	}
+}
+
+func handleMatchedIds(req CollectionRequest) {
+	if idMatcher == nil {
+		idMatcher = make(map[uuid.UUID]bool)
+	}
+
+	if req.WorkerType == "consumer" {
+		for _, id := range req.Ids {
+			if _, ok := idMatcher[id]; ok {
+				statistics.matchedIds++
+				delete(idMatcher, id)
+			}
+		}
+	} else {
+		for _, id := range req.Ids {
+			idMatcher[id] = true
+		}
+	}
+
+	statistics.missingMatchedIds = int64(len(idMatcher))
 }
 
 func convertToJson(w http.ResponseWriter, d interface{}) bool {
