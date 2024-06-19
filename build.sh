@@ -53,31 +53,48 @@ if [ -n "$GITHUB_ENV" ]; then
 fi
 
 # List of directories
-DIRS=("python" "rust" "java" "golang")
+#DIRS=("python" "rust" "java" "golang")
 
 # Generate a hash of the .dockerignore file
-DOCKERIGNORE_HASH=$(shasum -a 256 .dockerignore | awk '{ print $1 }')
+#DOCKERIGNORE_HASH=$(shasum -a 256 .dockerignore | awk '{ print $1 }')
 
-for DIR in "${DIRS[@]}"; do
-    if [ -f "${DIR}/.dockerignore" ]; then
-        TARGET_DOCKERIGNORE_HASH=$(shasum -a 256 "${DIR}/.dockerignore" | awk '{ print $1 }')
-        if [ "$DOCKERIGNORE_HASH" != "$TARGET_DOCKERIGNORE_HASH" ]; then
-            cp .dockerignore "${DIR}/"
-        fi
-    else
-        cp .dockerignore "${DIR}/"
-    fi
+#for DIR in "${DIRS[@]}"; do
+#    # Add .dockerignore file to the directory if it does not exist or has changed
+#    if [ -f "${DIR}/.dockerignore" ]; then
+#        TARGET_DOCKERIGNORE_HASH=$(shasum -a 256 "${DIR}/.dockerignore" | awk '{ print $1 }')
+#        if [ "$DOCKERIGNORE_HASH" != "$TARGET_DOCKERIGNORE_HASH" ]; then
+#            cp .dockerignore "${DIR}/"
+#        fi
+#    else
+#        cp .dockerignore "${DIR}/"
+#    fi
+#
+#    for DOCKERFILE in "$DIR"/Dockerfile.*; do
+#        echo "Building $DOCKERFILE"
+#        EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
+#        IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
+#        docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "$DOCKERFILE" .
+#        docker push "$IMAGE_NAME"
+#        echo "$IMAGE_NAME"
+#        echo "Done building $DOCKERFILE"
+#    done
+#done
 
-    for DOCKERFILE in "$DIR"/Dockerfile.*; do
-        echo "Building $DOCKERFILE"
-        EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
-        IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
-        docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "$DOCKERFILE" .
-        docker push "$IMAGE_NAME"
-        echo "$IMAGE_NAME"
-        echo "Done building $DOCKERFILE"
-    done
+echo "finished building all languages Kafka clients"
+echo "Building services"
+SERVICES_DIR=("services")
+for DIR in "${SERVICES_DIR[@]}"; do
+      find "$DIR" -mindepth 1 -maxdepth 1 -type d | while read -r SUBDIR; do
+          SUBDIR_NAME=$(basename "$SUBDIR")
+          echo "Building $SUBDIR_NAME $DOCKERFILE"
+          IMAGE_NAME="${REPOSITORY}/${IMAGE}:${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${SUBDIR_NAME}"
+          docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}/${SUBDIR_NAME}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "${DIR}/${SUBDIR_NAME}/Dockerfile" .
+#          docker push "$IMAGE_NAME"
+          echo "$IMAGE_NAME"
+          echo "Done building $DOCKERFILE"
+      done
 done
+echo "finished building all services"
 
 if [ -n "$GITHUB_ENV" ]; then
     echo "BUILD_NUMBER=v${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}" >> $GITHUB_ENV

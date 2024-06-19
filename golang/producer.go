@@ -35,6 +35,7 @@ func runProducer() {
 			}
 
 			batch := motivationData[i:end]
+			ids := []uuid.UUID{}
 
 			for _, row := range batch {
 				jsonRow, err := json.Marshal(row)
@@ -43,6 +44,7 @@ func runProducer() {
 				}
 
 				randomUUID := uuid.New()
+				ids = append(ids, randomUUID)
 				msg := &sarama.ProducerMessage{
 					Topic: ConfigInstance.Topic,
 					Value: sarama.StringEncoder(jsonRow),
@@ -55,7 +57,7 @@ func runProducer() {
 				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", ConfigInstance.Topic, partition, offset, msg.Key)
 			}
 
-			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)))
+			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)), ids)
 			time.Sleep(sleepDuration)
 		}
 	}

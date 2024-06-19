@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/IBM/sarama"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 
 type ConsumerGroupHandler struct {
 	messageCount int
+	ids          []uuid.UUID
 }
 
 func (h *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
@@ -23,9 +25,12 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 		sess.MarkMessage(msg, "")
 
 		h.messageCount++
+		id, _ := uuid.Parse(string(msg.Key))
+		h.ids = append(h.ids, id)
 		if h.messageCount == 10 {
-			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount))
+			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
 			h.messageCount = 0
+			h.ids = []uuid.UUID{}
 		}
 	}
 	return nil

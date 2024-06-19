@@ -77,6 +77,8 @@ affinity: {}
 bootstrapServers: ""
 topic: ""
 enableSSL: false
+enableStatistics: false
+statisticsCollectorUrl: ""
 
 consumerConfigurations:
   consumerGroupPrefix: "kafka-tester-consumer-"
