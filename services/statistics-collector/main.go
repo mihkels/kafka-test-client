@@ -46,7 +46,6 @@ type CountResponse struct {
 	Name  string `json:"name"`
 }
 
-var once sync.Once
 var statistics *Statistics
 
 var counterOnce sync.Once
@@ -59,10 +58,11 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/statistics", showStatistics)
-	http.HandleFunc("/collect", collectStatistics)
-	http.HandleFunc("/worker-count", workerCounter)
-	http.Handle("/", jsonMiddleware(http.DefaultServeMux))
+	initStatistics()
+
+	http.HandleFunc("/statistics", jsonMiddleware(showStatistics))
+	http.HandleFunc("/collect", jsonMiddleware(collectStatistics))
+	http.HandleFunc("/worker-count", jsonMiddleware(workerCounter))
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		fmt.Println("Error starting the server: ", err)
@@ -131,8 +131,6 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	initStatistics()
-
 	var req CollectionRequest
 	reqData, _ := getBodyAsString(r)
 	fmt.Println(reqData)
@@ -155,16 +153,14 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 }
 
 func initStatistics() {
-	once.Do(func() {
-		statistics = &Statistics{
-			consumers:         make(map[string]int64),
-			producers:         make(map[string]int64),
-			totalReceived:     0,
-			totalSent:         0,
-			missingMatchedIds: 0,
-			matchedIds:        0,
-		}
-	})
+	statistics = &Statistics{
+		consumers:         make(map[string]int64),
+		producers:         make(map[string]int64),
+		totalReceived:     0,
+		totalSent:         0,
+		missingMatchedIds: 0,
+		matchedIds:        0,
+	}
 }
 
 func showStatistics(w http.ResponseWriter, r *http.Request) {
@@ -173,7 +169,6 @@ func showStatistics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	initStatistics()
 	data := StatisticsResponse{
 		TotalConsumers: len(statistics.consumers),
 		TotalProducers: len(statistics.producers),
@@ -236,11 +231,11 @@ func convertToJson(w http.ResponseWriter, d interface{}) bool {
 	return false
 }
 
-func jsonMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func jsonMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		next.ServeHTTP(w, r)
-	})
+		next(w, r)
+	}
 }
 
 func getBodyAsString(r *http.Request) (string, error) {
