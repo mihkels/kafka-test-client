@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Statistics struct {
@@ -45,6 +46,7 @@ type CountResponse struct {
 	Name  string `json:"name"`
 }
 
+var counterMutex = &sync.Mutex{}
 var statistics *Statistics
 
 var counterInfo *WorkerCounter
@@ -105,6 +107,7 @@ func workerCounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var resp CountResponse
+	counterMutex.Lock()
 	if workerType == "consumer" {
 		counterInfo.Consumers++
 		resp = CountResponse{
@@ -118,6 +121,7 @@ func workerCounter(w http.ResponseWriter, r *http.Request) {
 			Name:  "producer-" + fmt.Sprint(counterInfo.Producers),
 		}
 	}
+	counterMutex.Unlock()
 
 	w.WriteHeader(http.StatusOK)
 	if convertToJson(w, resp) {
