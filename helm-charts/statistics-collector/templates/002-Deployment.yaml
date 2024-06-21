@@ -23,9 +23,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+      {{- range .Values.imagePullSecrets }}
+      - name: {{ . }}
       {{- end }}
       serviceAccountName: {{ include "statistics-client.serviceAccountName" . }}
       securityContext:
