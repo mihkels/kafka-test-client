@@ -146,10 +146,8 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	statisticsMutex.Lock()
 	manageStatistics(req)
 	handleMatchedIds(req)
-	statisticsMutex.Unlock()
 
 	data := map[string]string{
 		"status": "OK",
