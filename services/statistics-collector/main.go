@@ -108,8 +108,8 @@ func workerCounter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var resp CountResponse
 	counterMutex.Lock()
+	var resp CountResponse
 	if workerType == "consumer" {
 		counterInfo.Consumers++
 		resp = CountResponse{
@@ -209,6 +209,8 @@ func showStatistics(w http.ResponseWriter, r *http.Request) {
 }
 
 func manageStatistics(req CollectionRequest) {
+	statisticsMutex.Lock()
+	defer statisticsMutex.Unlock()
 	if req.WorkerType == "consumer" {
 		statistics.totalReceived += req.Count
 		statistics.consumers[req.WorkerName] += req.Count
@@ -219,6 +221,9 @@ func manageStatistics(req CollectionRequest) {
 }
 
 func handleMatchedIds(req CollectionRequest) {
+	statisticsMutex.Lock()
+	defer statisticsMutex.Unlock()
+
 	if idMatcher == nil {
 		idMatcher = make(map[uuid.UUID]bool)
 	}
