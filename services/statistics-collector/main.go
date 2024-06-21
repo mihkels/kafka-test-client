@@ -47,6 +47,8 @@ type CountResponse struct {
 }
 
 var counterMutex = &sync.Mutex{}
+var statisticsMutex = &sync.Mutex{}
+
 var statistics *Statistics
 
 var counterInfo *WorkerCounter
@@ -143,8 +145,11 @@ func collectStatistics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
+
+	statisticsMutex.Lock()
 	manageStatistics(req)
 	handleMatchedIds(req)
+	statisticsMutex.Unlock()
 
 	data := map[string]string{
 		"status": "OK",
