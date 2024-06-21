@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 )
 
 type Statistics struct {
@@ -48,7 +47,6 @@ type CountResponse struct {
 
 var statistics *Statistics
 
-var counterOnce sync.Once
 var counterInfo *WorkerCounter
 var idMatcher map[uuid.UUID]bool
 
@@ -58,9 +56,11 @@ func main() {
 		port = "8080"
 	}
 
+	initWorkerCounter()
 	initStatistics()
 
 	http.HandleFunc("/statistics", jsonMiddleware(showStatistics))
+	http.HandleFunc("/statistics/reset", jsonMiddleware(resetStatistics))
 	http.HandleFunc("/collect", jsonMiddleware(collectStatistics))
 	http.HandleFunc("/worker-count", jsonMiddleware(workerCounter))
 	err := http.ListenAndServe(":"+port, nil)
@@ -72,18 +72,18 @@ func main() {
 	fmt.Println("Server started on port ", port)
 }
 
+func initWorkerCounter() {
+	counterInfo = &WorkerCounter{
+		Consumers: 0,
+		Producers: 0,
+	}
+}
+
 func workerCounter(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	counterOnce.Do(func() {
-		counterInfo = &WorkerCounter{
-			Consumers: 0,
-			Producers: 0,
-		}
-	})
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -160,6 +160,21 @@ func initStatistics() {
 		totalSent:         0,
 		missingMatchedIds: 0,
 		matchedIds:        0,
+	}
+}
+
+func resetStatistics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	initStatistics()
+	initWorkerCounter()
+
+	w.WriteHeader(http.StatusOK)
+	if convertToJson(w, map[string]string{"status": "OK"}) {
+		return
 	}
 }
 

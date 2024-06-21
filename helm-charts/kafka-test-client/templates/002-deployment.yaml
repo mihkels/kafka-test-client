@@ -6,7 +6,11 @@ kind: Deployment
 metadata:
   name: kafka-tester-{{ $language }}-{{ . }}-deployment
 spec:
-  replicas: 1
+  {{- if eq . "producer" }}
+  replicas: {{ $.Values.replicas.producer }}
+  {{- else }}
+  replicas: {{ $.Values.replicas.consumer }}
+  {{- end }}
   selector:
     matchLabels:
       app: kafka-tester-{{ $language }}-{{ . }}
@@ -34,7 +38,7 @@ spec:
             value: {{ . }}
           - name: ENABLE_STATISTICS
             value: {{ quote $.Values.enableStatistics | default "false" }}
-          {{- if eq $.Values.enableStatistics "true" }}
+          {{- if eq $.Values.enableStatistics true }}
           - name: STATISTICS_COLLECTOR_URL
             value: {{ $.Values.statisticsCollectorUrl }}
           {{- end }}
