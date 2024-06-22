@@ -234,7 +234,9 @@ func manageStatistics(req CollectionRequest) {
 	if req.WorkerType == "consumer" {
 		statistics.totalReceived += req.Count
 		statistics.consumers[req.WorkerName] += req.Count
-	} else {
+	}
+
+	if req.WorkerType == "producer" {
 		statistics.totalSent += req.Count
 		statistics.producers[req.WorkerName] += req.Count
 	}
@@ -255,7 +257,9 @@ func handleMatchedIds(req CollectionRequest) {
 				delete(idMatcher, id)
 			}
 		}
-	} else {
+	}
+
+	if req.WorkerType == "producer" {
 		for _, id := range req.Ids {
 			idMatcher[id] = true
 		}

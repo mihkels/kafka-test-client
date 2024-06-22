@@ -54,6 +54,7 @@ fi
 
 # List of directories
 DIRS=("python" "rust" "java" "golang")
+#DIRS=("golang")
 
 # Generate a hash of the .dockerignore file
 DOCKERIGNORE_HASH=$(shasum -a 256 .dockerignore | awk '{ print $1 }')

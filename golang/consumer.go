@@ -8,22 +8,24 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
 type ConsumerGroupHandler struct {
 	messageCount int
 	ids          []uuid.UUID
+	mu           sync.Mutex
 }
 
-func (h *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
-func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
+func (h *ConsumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error { return nil }
 
 func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for msg := range claim.Messages() {
 		fmt.Printf("Message topic:%q, body:%q, partition:%d offset:%d\n", msg.Topic, string(msg.Value), msg.Partition, msg.Offset)
 		sess.MarkMessage(msg, "")
 
+		h.mu.Lock()
 		h.messageCount++
 		id, _ := uuid.Parse(string(msg.Key))
 		h.ids = append(h.ids, id)
@@ -32,7 +34,19 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 			h.messageCount = 0
 			h.ids = []uuid.UUID{}
 		}
+		h.mu.Unlock()
 	}
+	return nil
+}
+
+func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
+	h.mu.Lock()
+	if h.messageCount > 0 {
+		SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+		h.messageCount = 0
+		h.ids = []uuid.UUID{}
+	}
+	h.mu.Unlock()
 	return nil
 }
 
