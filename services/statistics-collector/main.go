@@ -21,8 +21,10 @@ type Statistics struct {
 }
 
 type WorkerCounter struct {
-	Consumers int `json:"consumers"`
-	Producers int `json:"producers"`
+	Consumers           int      `json:"consumers"`
+	Producers           int      `json:"producers"`
+	ConsumerWorkerNames []string `json:"consumerWorkerNames"`
+	ProducerWorkerNames []string `json:"producerWorkerNames"`
 }
 
 type CollectionRequest struct {
@@ -67,6 +69,7 @@ func main() {
 	http.HandleFunc("/statistics/reset", jsonMiddleware(resetStatistics))
 	http.HandleFunc("/collect", jsonMiddleware(collectStatistics))
 	http.HandleFunc("/worker-count", jsonMiddleware(workerCounter))
+	http.HandleFunc("/worker-count/info", jsonMiddleware(workerCounterInfo))
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		fmt.Println("Error starting the server: ", err)
@@ -76,10 +79,24 @@ func main() {
 	fmt.Println("Server started on port ", port)
 }
 
+func workerCounterInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if convertToJson(w, counterInfo) {
+		return
+	}
+}
+
 func initWorkerCounter() {
 	counterInfo = &WorkerCounter{
-		Consumers: 0,
-		Producers: 0,
+		Consumers:           0,
+		Producers:           0,
+		ConsumerWorkerNames: make([]string, 0),
+		ProducerWorkerNames: make([]string, 0),
 	}
 }
 
@@ -108,19 +125,24 @@ func workerCounter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counterMutex.Lock()
 	var resp CountResponse
+	counterMutex.Lock()
 	if workerType == "consumer" {
-		counterInfo.Consumers++
+		consumerName := "consumer-" + fmt.Sprint(counterInfo.Consumers)
+		counterInfo.ConsumerWorkerNames = append(counterInfo.ConsumerWorkerNames, consumerName)
+		counterInfo.Consumers += 1
 		resp = CountResponse{
 			Count: counterInfo.Consumers,
-			Name:  "consumer-" + fmt.Sprint(counterInfo.Consumers),
+			Name:  consumerName,
 		}
 	} else {
-		counterInfo.Producers++
+		producerName := "producer-" + fmt.Sprint(counterInfo.Producers)
+		counterInfo.Producers += 1
+		counterInfo.ProducerWorkerNames = append(counterInfo.ProducerWorkerNames, producerName)
+
 		resp = CountResponse{
 			Count: counterInfo.Producers,
-			Name:  "producer-" + fmt.Sprint(counterInfo.Producers),
+			Name:  producerName,
 		}
 	}
 	counterMutex.Unlock()
@@ -212,7 +234,9 @@ func manageStatistics(req CollectionRequest) {
 	if req.WorkerType == "consumer" {
 		statistics.totalReceived += req.Count
 		statistics.consumers[req.WorkerName] += req.Count
-	} else {
+	}
+
+	if req.WorkerType == "producer" {
 		statistics.totalSent += req.Count
 		statistics.producers[req.WorkerName] += req.Count
 	}
@@ -233,7 +257,9 @@ func handleMatchedIds(req CollectionRequest) {
 				delete(idMatcher, id)
 			}
 		}
-	} else {
+	}
+
+	if req.WorkerType == "producer" {
 		for _, id := range req.Ids {
 			idMatcher[id] = true
 		}

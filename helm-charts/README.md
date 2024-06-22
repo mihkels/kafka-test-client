@@ -1,3 +1,9 @@
+Install statistics collector:
+
+```shell
+helm upgrade --install stat-client helm-charts/statistics-collector -n kafka-worker -f helm-charts/statistics-collector/overrides.yaml
+```
+
 ```shell
  helm upgrade --install kafka-test-client . -n kafka-worker -f overrides.yaml --dry-run
 ```
