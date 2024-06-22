@@ -1,8 +1,10 @@
 ### GET statistics from server
 GET http://localhost:8080/statistics
 
-### Load worker info
+### Reset statistics
+GET http://localhost:8080/statistics/reset
 
+### Load worker info
 GET http://localhost:8080/worker-count/info
 
 ### POST send statistics to server as producer
