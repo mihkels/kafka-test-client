@@ -23,6 +23,8 @@ type Config struct {
 	EnableStatistics       bool
 	StatisticsCollectorURL string
 	WorkerName             string
+
+	UseHeaders bool
 }
 
 var ConfigInstance *Config
@@ -48,6 +50,7 @@ func NewConfig() *Config {
 		Group:                  getEnvString("CONSUMER_GROUP", "golang-test-cg"),
 		EnableStatistics:       getEnvString("ENABLE_STATISTICS", "false") == "true",
 		StatisticsCollectorURL: getEnvString("STATISTICS_COLLECTOR_URL", "http://localhost:8080"),
+		UseHeaders:             getEnvBool("ENABLE_HEADERS", false),
 	}
 }
 
@@ -69,4 +72,18 @@ func getEnvInt(key string, defaultValue int) int {
 		return defaultValue
 	}
 	return value
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	parsedValue, err := strconv.ParseBool(value)
+	if err != nil {
+		log.Printf("Warning: Could not parse boolean value for key %s, using default %v", key, defaultValue)
+		return defaultValue
+	}
+
+	return parsedValue
 }
