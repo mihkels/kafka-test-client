@@ -28,7 +28,7 @@ cd kafka-test-client
 # Create namespace to deploy kafka test clients
 kubectl create ns kafka-test
 # Deploy KafkaKubeClients
-helm upgrade helm-charts/kafka-test-client -n kafka-test -f overrides.yaml --install
+helm upgrade kafka-test-client helm-charts/kafka-test-client -n kafka-test -f overrides.yaml --install
 ```
 
 > 💡 NOTE: You should have a running Kubernetes test cluster with a Kafka cluster installed in your target repository.
@@ -39,6 +39,10 @@ Sample `overrides.yaml` file:
 ```yaml
 bootstrapServers: "strimzi-cluster-kafka-bootstrap.kafka.svc:9092"
 topic: "motivation"
+
+replicas:
+  producer: 1
+  consumer: 1
 
 producerConfigurations:
   sampleIntervalInSeconds: 5 # How long to sleep between sending messages

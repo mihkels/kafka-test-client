@@ -168,3 +168,5 @@ droplet_info.csv
 .DS_Store
 
 .shared/*/**
+
+overrides.yaml
