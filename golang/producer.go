@@ -5,6 +5,7 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
 	"log"
+	"math/rand"
 	"time"
 )
 
@@ -27,6 +28,8 @@ func runProducer() {
 	sleepDuration := time.Second * ConfigInstance.SleepInterval
 
 	log.Printf("Start sending data into topic: %s\n", ConfigInstance.Topic)
+
+	pool := compactedTopicUuidPool()
 	for {
 		for i := 0; i < len(motivationData); i += batchSize {
 			end := i + batchSize
@@ -43,7 +46,13 @@ func runProducer() {
 					log.Fatalf("json.Marshal: %s", err)
 				}
 
-				randomUUID := uuid.New()
+				var randomUUID uuid.UUID
+				if !ConfigInstance.EnableCompactedTopic {
+					randomUUID = uuid.New()
+				} else {
+					randomUUID = pool[rand.Intn(len(pool))]
+				}
+
 				ids = append(ids, randomUUID)
 				msg := &sarama.ProducerMessage{
 					Topic: ConfigInstance.Topic,
@@ -57,8 +66,23 @@ func runProducer() {
 				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", ConfigInstance.Topic, partition, offset, msg.Key)
 			}
 
-			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)), ids)
+			if ConfigInstance.EnableStatistics {
+				SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)), ids)
+			}
+
 			time.Sleep(sleepDuration)
 		}
 	}
+}
+
+func compactedTopicUuidPool() []uuid.UUID {
+	var pool = []uuid.UUID{}
+	if ConfigInstance.EnableCompactedTopic {
+		log.Printf("Compacted topic is enabled with key pool size: %d\n", ConfigInstance.CompactedKeyPoolSize)
+		for i := 0; i < ConfigInstance.CompactedKeyPoolSize; i++ {
+			poolId := uuid.New()
+			pool = append(pool, poolId)
+		}
+	}
+	return pool
 }

@@ -30,7 +30,9 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 		id, _ := uuid.Parse(string(msg.Key))
 		h.ids = append(h.ids, id)
 		if h.messageCount == 10 {
-			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+			if ConfigInstance.EnableStatistics {
+				SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+			}
 			h.messageCount = 0
 			h.ids = []uuid.UUID{}
 		}
@@ -42,7 +44,10 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 	h.mu.Lock()
 	if h.messageCount > 0 {
-		SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+		if ConfigInstance.EnableStatistics {
+			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+		}
+
 		h.messageCount = 0
 		h.ids = []uuid.UUID{}
 	}

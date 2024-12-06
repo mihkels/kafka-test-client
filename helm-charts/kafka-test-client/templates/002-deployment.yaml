@@ -51,6 +51,10 @@ spec:
             value: {{ quote $.Values.producerConfigurations.batchSize }}
           - name: SLEEP_TIME
             value: {{ quote $.Values.producerConfigurations.sampleIntervalInSeconds }}
+          - name: ENABLE_COMPACTED_TOPIC
+            value: {{ quote $.Values.producerConfigurations.enableCompactTopic | default "false" }}
+          - name: COMPACTED_KEY_POOL_SIZE
+            value: {{ quote $.Values.producerConfigurations.compactedKeyPoolSize | default "50" }}
           {{- end }}
           {{- if eq . "consumer" }}
           - name: MOTIVATION_CONSUMER_GROUP_NAME

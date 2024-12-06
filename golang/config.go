@@ -23,6 +23,8 @@ type Config struct {
 	EnableStatistics       bool
 	StatisticsCollectorURL string
 	WorkerName             string
+	EnableCompactedTopic   bool
+	CompactedKeyPoolSize   int
 }
 
 var ConfigInstance *Config
@@ -48,7 +50,24 @@ func NewConfig() *Config {
 		Group:                  getEnvString("CONSUMER_GROUP", "golang-test-cg"),
 		EnableStatistics:       getEnvString("ENABLE_STATISTICS", "false") == "true",
 		StatisticsCollectorURL: getEnvString("STATISTICS_COLLECTOR_URL", "http://localhost:8080"),
+		EnableCompactedTopic:   getEnvBool("ENABLE_COMPACTED_TOPIC", false),
+		CompactedKeyPoolSize:   getEnvInt("COMPACTED_KEY_POOL_SIZE", 50),
 	}
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	valueStr, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+
+	value, err := strconv.ParseBool(valueStr)
+	if err != nil {
+		log.Printf("Error parsing %s: %v\n", key, err)
+		return defaultValue
+	}
+
+	return value
 }
 
 func getEnvString(key, defaultValue string) string {

@@ -89,6 +89,8 @@ producerConfigurations:
   sampleSize: 1000
   sampleIntervalInSeconds: 5
   batchSize: 10
+  enableCompactTopic: false
+  compactedKeyPoolSize: 50
 
 programmingLanguage:
   - 'python'

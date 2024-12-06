@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22.4 as builder
+FROM golang:1.23.3 AS builder
 
 ARG BASE_DIR
 
@@ -34,6 +34,9 @@ COPY --from=builder /opt/motivation.csv /opt/motivation.csv
 
 RUN ls -al
 RUN chmod +x /app/startup.sh
+
+RUN apk add --no-cache iputils && \
+    chmod u+s /bin/ping
 
 RUN chown -R appuser:appuser /app
 USER appuser

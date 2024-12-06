@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22.4 as builder
+FROM golang:1.23.3 AS builder
 
 ARG BASE_DIR
 
@@ -37,9 +37,14 @@ COPY --from=builder /app/kafka_app /app/kafka_app
 COPY --from=builder /opt/motivation.csv /opt/motivation.csv
 
 RUN ls -al
-RUN chmod +x /app/startup.sh
 
-RUN chown -R appuser:appuser /app
+RUN chmod +x /app/startup.sh && \
+    chown appuser:appuser /opt/motivation.csv && \
+    chown -R appuser:appuser /app
+
+RUN apk add --no-cache iputils && \
+    chmod u+s /bin/ping
+
 USER appuser
 
 ENTRYPOINT ["/app/startup.sh"]

@@ -47,7 +47,8 @@ else
     IMAGE='kafka-tester'
 fi
 
-ARCHITECTURES=linux/amd64,linux/arm64
+# ARCHITECTURES=linux/amd64,linux/arm64
+ARCHITECTURES=linux/amd64
 if [ -n "$GITHUB_ENV" ]; then
   ARCHITECTURES=linux/amd64
 fi
@@ -74,6 +75,7 @@ for DIR in "${DIRS[@]}"; do
         echo "Building $DOCKERFILE"
         EXTENSION="${DOCKERFILE#"$DIR"/Dockerfile.}"
         IMAGE_NAME="${REPOSITORY}/${IMAGE}:${EXTENSION}-${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${DIR}"
+#        docker buildx build --output type=docker --build-arg BASE_DIR="${DIR}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "$DOCKERFILE" .
         docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "$DOCKERFILE" .
         docker push "$IMAGE_NAME"
         echo "$IMAGE_NAME"
@@ -88,10 +90,13 @@ for DIR in "${SERVICES_DIR[@]}"; do
       find "$DIR" -mindepth 1 -maxdepth 1 -type d | while read -r SUBDIR; do
           SUBDIR_NAME=$(basename "$SUBDIR")
           echo "Building $SUBDIR_NAME $DOCKERFILE"
-          IMAGE_NAME="${REPOSITORY}/${IMAGE}:${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}-${SUBDIR_NAME}"
+          FULL_BUILD_NUMBER=${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.${MONTH_BUILD_NUMBER}
+          IMAGE_NAME="${REPOSITORY}/${IMAGE}:${FULL_BUILD_NUMBER}-${SUBDIR_NAME}"
           docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max --build-arg BASE_DIR="${DIR}/${SUBDIR_NAME}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "${DIR}/${SUBDIR_NAME}/Dockerfile" .
+#          docker buildx build --output type=docker --build-arg BASE_DIR="${DIR}/${SUBDIR_NAME}" --progress plain --platform=${ARCHITECTURES} -t "$IMAGE_NAME" -f "${DIR}/${SUBDIR_NAME}/Dockerfile" .
           docker push "$IMAGE_NAME"
           echo "$IMAGE_NAME"
+#          echo "$FULL_BUILD_NUMBER" > "full_build_number.txt"
           echo "Done building $DOCKERFILE"
       done
 done
