@@ -1,10 +1,12 @@
-package main
+package client
 
 import (
 	"context"
 	"fmt"
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
+	"kafka_demo/internal/config"
+	"kafka_demo/internal/stats"
 	"log"
 	"os"
 	"os/signal"
@@ -30,8 +32,8 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 		id, _ := uuid.Parse(string(msg.Key))
 		h.ids = append(h.ids, id)
 		if h.messageCount == 10 {
-			if ConfigInstance.EnableStatistics {
-				SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+			if config.Instance.EnableStatistics {
+				stats.SendStatistics(config.Instance.ApplicationMode, config.Instance.WorkerName, int64(h.messageCount), h.ids)
 			}
 			h.messageCount = 0
 			h.ids = []uuid.UUID{}
@@ -44,8 +46,8 @@ func (h *ConsumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, cl
 func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 	h.mu.Lock()
 	if h.messageCount > 0 {
-		if ConfigInstance.EnableStatistics {
-			SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(h.messageCount), h.ids)
+		if config.Instance.EnableStatistics {
+			stats.SendStatistics(config.Instance.ApplicationMode, config.Instance.WorkerName, int64(h.messageCount), h.ids)
 		}
 
 		h.messageCount = 0
@@ -55,12 +57,16 @@ func (h *ConsumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func runConsumer() {
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
-	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+func RunConsumer() {
+	clientConfig := KafkaClient{
+		Config: config.Instance,
+	}
 
-	group, err := sarama.NewConsumerGroup([]string{ConfigInstance.Brokers}, ConfigInstance.Group, config)
+	kafkaConfig, err := clientConfig.NewKafkaClientConfig()
+	kafkaConfig.Consumer.Return.Errors = true
+	kafkaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+
+	group, err := sarama.NewConsumerGroup([]string{config.Instance.Brokers}, config.Instance.Group, kafkaConfig)
 	if err != nil {
 		log.Fatalln("Error creating consumer group client: ", err)
 	}
@@ -70,7 +76,7 @@ func runConsumer() {
 
 	go func() {
 		for {
-			if err := group.Consume(ctx, []string{ConfigInstance.Topic}, &handler); err != nil {
+			if err := group.Consume(ctx, []string{config.Instance.Topic}, &handler); err != nil {
 				log.Fatalln("Error from consumer: ", err)
 			}
 		}

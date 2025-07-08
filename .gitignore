@@ -170,3 +170,4 @@ droplet_info.csv
 .shared/*/**
 
 overrides.yaml
+full-build-number.txt

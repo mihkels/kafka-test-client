@@ -1,10 +1,11 @@
-package main
+package stats
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/google/uuid"
 	"io"
+	"kafka_demo/internal/config"
 	"log"
 	"net/http"
 )
@@ -17,7 +18,7 @@ type CollectionRequest struct {
 }
 
 func SendStatistics(workerType string, workerName string, count int64, ids []uuid.UUID) {
-	url := ConfigInstance.StatisticsCollectorURL
+	url := config.Instance.StatisticsCollectorURL
 	req := CollectionRequest{
 		WorkerType: workerType,
 		WorkerName: workerName,

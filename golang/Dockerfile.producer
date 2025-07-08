@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23.3 AS builder
+FROM golang:1.24.4 AS builder
 
 ARG BASE_DIR
 
@@ -11,8 +11,10 @@ COPY shared/data/motivation.csv /opt/motivation.csv
 
 RUN go mod download
 
-COPY $BASE_DIR/*.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_app .
+COPY ${BASE_DIR}/cmd ./cmd
+COPY ${BASE_DIR}/internal ./internal
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kafka_app ./cmd
 RUN ls -al
 
 # Final stage

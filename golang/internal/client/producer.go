@@ -1,19 +1,25 @@
-package main
+package client
 
 import (
 	"encoding/json"
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
+	config2 "kafka_demo/internal/config"
+	"kafka_demo/internal/stats"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func runProducer() {
+func RunProducer() {
 	motivationData := readMotivationFile()
-	config := sarama.NewConfig()
+	clientConfig := KafkaClient{
+		Config: config2.Instance,
+	}
+
+	config, err := clientConfig.NewKafkaClientConfig()
 	config.Producer.Return.Successes = true
-	producer, err := sarama.NewSyncProducer([]string{ConfigInstance.Brokers}, config)
+	producer, err := sarama.NewSyncProducer([]string{config2.Instance.Brokers}, config)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -24,10 +30,10 @@ func runProducer() {
 		}
 	}()
 
-	batchSize := ConfigInstance.BatchSize
-	sleepDuration := time.Second * ConfigInstance.SleepInterval
+	batchSize := config2.Instance.BatchSize
+	sleepDuration := time.Second * config2.Instance.SleepInterval
 
-	log.Printf("Start sending data into topic: %s\n", ConfigInstance.Topic)
+	log.Printf("Start sending data into topic: %s\n", config2.Instance.Topic)
 
 	pool := compactedTopicUuidPool()
 	for {
@@ -47,7 +53,7 @@ func runProducer() {
 				}
 
 				var randomUUID uuid.UUID
-				if !ConfigInstance.EnableCompactedTopic {
+				if !config2.Instance.EnableCompactedTopic {
 					randomUUID = uuid.New()
 				} else {
 					randomUUID = pool[rand.Intn(len(pool))]
@@ -55,7 +61,7 @@ func runProducer() {
 
 				ids = append(ids, randomUUID)
 				msg := &sarama.ProducerMessage{
-					Topic: ConfigInstance.Topic,
+					Topic: config2.Instance.Topic,
 					Value: sarama.StringEncoder(jsonRow),
 					Key:   sarama.StringEncoder(randomUUID.String()),
 				}
@@ -63,11 +69,11 @@ func runProducer() {
 				if err != nil {
 					log.Fatalln(err)
 				}
-				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", ConfigInstance.Topic, partition, offset, msg.Key)
+				log.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d) with key: %s\n", config2.Instance.Topic, partition, offset, msg.Key)
 			}
 
-			if ConfigInstance.EnableStatistics {
-				SendStatistics(ConfigInstance.ApplicationMode, ConfigInstance.WorkerName, int64(len(batch)), ids)
+			if config2.Instance.EnableStatistics {
+				stats.SendStatistics(config2.Instance.ApplicationMode, config2.Instance.WorkerName, int64(len(batch)), ids)
 			}
 
 			time.Sleep(sleepDuration)
@@ -77,9 +83,9 @@ func runProducer() {
 
 func compactedTopicUuidPool() []uuid.UUID {
 	var pool = []uuid.UUID{}
-	if ConfigInstance.EnableCompactedTopic {
-		log.Printf("Compacted topic is enabled with key pool size: %d\n", ConfigInstance.CompactedKeyPoolSize)
-		for i := 0; i < ConfigInstance.CompactedKeyPoolSize; i++ {
+	if config2.Instance.EnableCompactedTopic {
+		log.Printf("Compacted topic is enabled with key pool size: %d\n", config2.Instance.CompactedKeyPoolSize)
+		for i := 0; i < config2.Instance.CompactedKeyPoolSize; i++ {
 			poolId := uuid.New()
 			pool = append(pool, poolId)
 		}

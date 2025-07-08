@@ -1,8 +1,9 @@
-package main
+package client
 
 import (
 	"bufio"
 	"encoding/csv"
+	"kafka_demo/internal/config"
 	"log"
 	"math/rand"
 	"os"
@@ -14,7 +15,7 @@ func loadRandomNumberOfLines(rows []map[string]string) []map[string]string {
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
 
-	numRandomLines := ConfigInstance.NumberOfSamples
+	numRandomLines := config.Instance.NumberOfSamples
 	randomIndices := r.Perm(len(rows))
 
 	// Select the random lines
@@ -27,7 +28,7 @@ func loadRandomNumberOfLines(rows []map[string]string) []map[string]string {
 }
 
 func readMotivationFile() []map[string]string {
-	filePath := ConfigInstance.ProducerDataFile
+	filePath := config.Instance.ProducerDataFile
 
 	file, err := os.Open(filePath)
 	if err != nil {

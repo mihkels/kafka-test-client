@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"github.com/joho/godotenv"
@@ -12,7 +12,14 @@ type Config struct {
 	ApplicationMode string
 
 	Brokers string
-	Topic   string
+
+	UseTls        bool
+	AllowInsecure bool
+	CaCert        string
+	UserCert      string
+	UserKey       string
+
+	Topic string
 
 	ProducerDataFile string
 	NumberOfSamples  int
@@ -27,10 +34,10 @@ type Config struct {
 	CompactedKeyPoolSize   int
 }
 
-var ConfigInstance *Config
+var Instance *Config
 
 func init() {
-	ConfigInstance = NewConfig()
+	Instance = NewConfig()
 }
 
 func NewConfig() *Config {
@@ -42,6 +49,11 @@ func NewConfig() *Config {
 	return &Config{
 		ApplicationMode:        getEnvString("APPLICATION_MODE", "producer"),
 		Brokers:                getEnvString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
+		UseTls:                 getEnvBool("USE_TLS", false),
+		AllowInsecure:          getEnvBool("USE_TLS_ALLOW_INSECURE", false),
+		CaCert:                 getEnvString("CA_CERT", ""),
+		UserCert:               getEnvString("USER_CERT", ""),
+		UserKey:                getEnvString("USER_KEY", ""),
 		Topic:                  getEnvString("TOPIC", "test"),
 		ProducerDataFile:       getEnvString("MOTIVATION_FILE", "data.csv"),
 		NumberOfSamples:        getEnvInt("NUM_SAMPLES", 100),

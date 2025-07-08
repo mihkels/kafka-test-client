@@ -27,8 +27,13 @@ spec:
       - name: {{ $.Chart.Name }}-{{ $language }}-{{ . }}
         securityContext:
           {{- toYaml $.Values.securityContext | nindent 12 }}
-        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default (printf "%s-%s-%s" . $.Chart.AppVersion $language) }}"
+        {{- $tag := (or $.Values.image.tag $.Chart.AppVersion) }}
+        image: "{{ $.Values.image.repository }}:{{ printf "%s-%s-%s" . $tag $language }}"
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
+        {{- if $.Values.volumeMounts }}
+        volumeMounts:
+        {{- toYaml $.Values.volumeMounts | nindent 8 }}
+        {{- end }}
         env:
           - name: KAFKA_BOOTSTRAP_SERVERS
             value: {{ $.Values.bootstrapServers }}
@@ -42,9 +47,19 @@ spec:
           - name: STATISTICS_COLLECTOR_URL
             value: {{ $.Values.statisticsCollectorUrl }}
           {{- end }}
+          {{- if eq $.Values.auth.enable true }}
+          - name: USE_TLS 
+            value: {{ quote $.Values.auth.enable | default "false" }}
+          - name: USE_TLS_ALLOW_INSECURE 
+            value: {{ quote $.Values.auth.allowInsecure | default "false" }}
+          - name: CA_CERT
+            value: {{ quote $.Values.auth.caCert | default "" }}
+          - name: USER_CERT
+            value: {{ quote $.Values.auth.userCert | default "" }}
+          - name: USER_KEY
+            value: {{ quote $.Values.auth.userKey | default "" }}
+          {{- end }}
           {{- if eq . "producer" }}
-          - name: ENABLE_SSL
-            value: {{ quote $.Values.enableSSL }}
           - name: NUM_SAMPLES
             value: {{ quote $.Values.producerConfigurations.sampleSize }}
           - name: BATCH_SIZE
@@ -60,6 +75,10 @@ spec:
           - name: MOTIVATION_CONSUMER_GROUP_NAME
             value: {{ $.Values.consumerConfigurations.consumerGroupPrefix }}{{ $language }}-{{ . }}
           {{- end }}
+      {{- if $.Values.volumes }}
+      volumes:
+      {{- toYaml $.Values.volumes | nindent 6 }}
+      {{- end }}
       {{- if $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- range $.Values.imagePullSecrets }}

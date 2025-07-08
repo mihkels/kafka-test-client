@@ -78,6 +78,11 @@ replicas:
 
 bootstrapServers: ""
 topic: ""
+
+auth:
+  enable: false
+  allowInsecure: false
+
 enableSSL: false
 enableStatistics: false
 statisticsCollectorUrl: ""

@@ -3,28 +3,30 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"kafka_demo/internal/client"
+	"kafka_demo/internal/config"
 	"log"
 	"net/http"
 )
 
 func main() {
 	log.Printf("Starting application\n")
-	var appMode = ConfigInstance.ApplicationMode
+	var appMode = config.Instance.ApplicationMode
 	log.Printf("Application mode: %s\n", appMode)
-	log.Printf("Brokers: %s\n", ConfigInstance.Brokers)
-	log.Printf("Topic: %s\n", ConfigInstance.Topic)
+	log.Printf("Brokers: %s\n", config.Instance.Brokers)
+	log.Printf("Topic: %s\n", config.Instance.Topic)
 
-	if ConfigInstance.EnableStatistics {
-		log.Printf("Statistics collector URL: %s\n", ConfigInstance.StatisticsCollectorURL)
+	if config.Instance.EnableStatistics {
+		log.Printf("Statistics collector URL: %s\n", config.Instance.StatisticsCollectorURL)
 		data, err := json.Marshal(map[string]string{"workerType": appMode})
 		if err != nil {
 			log.Fatalf("json.Marshal: %s", err)
 		}
 
-		client := &http.Client{}
+		statClient := &http.Client{}
 		reader := bytes.NewReader(data)
-		resp, err := client.Post(
-			ConfigInstance.StatisticsCollectorURL+"/worker-count",
+		resp, err := statClient.Post(
+			config.Instance.StatisticsCollectorURL+"/worker-count",
 			"application/json",
 			reader)
 		if err != nil {
@@ -39,12 +41,12 @@ func main() {
 		}
 
 		log.Printf("Worker count: %v\n", result)
-		ConfigInstance.WorkerName = result["name"].(string)
+		config.Instance.WorkerName = result["name"].(string)
 	}
 
 	if appMode == "producer" {
-		runProducer()
+		client.RunProducer()
 	} else {
-		runConsumer()
+		client.RunConsumer()
 	}
 }
